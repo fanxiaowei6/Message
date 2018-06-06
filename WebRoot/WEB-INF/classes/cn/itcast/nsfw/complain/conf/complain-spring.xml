@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation=" http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd 
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+	
+	<bean id="complainDao" class="cn.itcast.nsfw.complain.dao.impl.ComplainDaoImpl" parent="baseDao"></bean>
+
+	
+	<!-- 扫描service -->
+    <context:component-scan base-package="cn.itcast.nsfw.complain.service.impl"></context:component-scan>
+	
+	
+	<!-- 1、定义一个jobDetail1的详细任务bean -->
+	<bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<!-- 要执行的bean实体要映射到complainService -->
+	<property name="targetObject" ref="complainService" ></property>
+	<!-- 执行方法autoDeal -->
+	<property name="targetMethod" value="autoDeal"></property>
+	<!-- 不同步执行 -->	
+	<property name="concurrent" value="false"></property>
+	</bean>
+	
+	<!-- 2、定义一个CronTrigger触发器 -->
+	<bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+	<!-- 指定要执行的任务信息bean -->
+	<property name="jobDetail" ref="jobDetail"></property>
+	<!-- 指定任务执行时间，每月最后一天的十二点开始执行 -->
+	<property name="cronExpression" value="5 * 16 L * ?"></property>
+	</bean>
+	
+	<!-- 3、定义一个sechdulerFactory任务调度工厂 -->
+	<bean id="sechdulerFactory" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+	<property name="triggers">
+		<list>
+			<ref bean="cronTrigger"/>		
+		</list>
+	</property>
+	</bean>
+	
+	</beans>
